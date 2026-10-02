@@ -17,7 +17,7 @@ motor5 = None # Added motor5
 motor_loop = None
 
 # New variables for GPIO Servo tracking
-SERVO_PIN = 2
+SERVO_PIN = 3
 servo_pwm = None
 current_servo_angle = 90  # Start at a neutral 90-degree position
 
