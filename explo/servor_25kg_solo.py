@@ -2,6 +2,12 @@ import RPi.GPIO as GPIO
 import time
 import math
 
+### Pour conneter le tout a la raspberry pi et au external power, il faut que 
+# le + du power supply aille au + du moteur, 
+# le signal a la PIN du raspberry,
+# le ground du raspberry pie vers le powersupply et du moteur au powersupply
+
+
 #On peut envoyer des cycle de 2 a 12 dans ce cervo moteur, qui lui a un angle de 0 a 270 degre.
 #Set function to calculate percent from angle
 def angle_to_percent (angle) :

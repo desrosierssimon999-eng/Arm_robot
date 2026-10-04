@@ -14,12 +14,17 @@ motor2 = None
 motor3 = None
 motor4 = None # Added motor4
 motor5 = None # Added motor5
+motor6 = None # Added motor6
 motor_loop = None
 
+#sudo ip link set down can0
+#sudo ip link set can0 type can bitrate 500000 restart-ms 100
+#sudo ip link set up can0
+
 # New variables for GPIO Servo tracking
-SERVO_PIN = 3
+SERVO_PIN = 2
 servo_pwm = None
-current_servo_angle = 90  # Start at a neutral 90-degree position
+current_servo_angle = 33  # Start at a neutral 90-degree position
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -146,7 +151,16 @@ HTML_TEMPLATE = """
         
         <!-- Motor 6 -->
         <div class="motor-card">
-            <div class="motor-title">Motor 6 (GPIO Servo)</div>
+            <div class="motor-title">Motor 6 (Rotation 3)</div>
+            <div class="btn-group">
+                <button class="btn" onclick="fetch('/rot_clockwise3')">CW 3 🔄</button>
+                <button class="btn" onclick="fetch('/rot_counter_clockwise3')">CCW 3 🔄</button>
+            </div>
+        </div>
+
+        <!-- Motor 7 -->
+        <div class="motor-card">
+            <div class="motor-title">Motor 7 (GPIO Servo)</div>
             <div class="btn-group">
                 <button class="btn" onclick="fetch('/open')">OPEN 🟢</button>
                 <button class="btn" onclick="fetch('/close')">CLOSE 🔴</button>
@@ -180,7 +194,7 @@ def init_gpio_servo():
 
 async def init_motor_async():
     """Initialise le matériel CAN dans la boucle asynchrone"""
-    global can_if, motor1, motor2, motor3, motor4, motor5
+    global can_if, motor1, motor2, motor3, motor4, motor5, motor6
     print("Initializing Linux SocketCAN Interface...")
     can_if = CANInterface(
         use_simulator=False,
@@ -200,8 +214,9 @@ async def init_motor_async():
     motor1 = Axis(can_if, motor_can_id=1, name="MKS_Motor_1", kinematics=kin)
     motor2 = Axis(can_if, motor_can_id=2, name="MKS_Motor_2", kinematics=kin)
     motor3 = Axis(can_if, motor_can_id=3, name="MKS_Motor_3", kinematics=kin)
-    motor4 = Axis(can_if, motor_can_id=4, name="MKS_Motor_4", kinematics=kin) # Setup motor4
-    motor5 = Axis(can_if, motor_can_id=6, name="MKS_Motor_5", kinematics=kin) # Setup motor5
+    motor4 = Axis(can_if, motor_can_id=4, name="MKS_Motor_4", kinematics=kin)
+    motor5 = Axis(can_if, motor_can_id=5, name="MKS_Motor_5", kinematics=kin)
+    motor6 = Axis(can_if, motor_can_id=6, name="MKS_Motor_6", kinematics=kin)
 
     try:
         print("Initializing motor tracking...")
@@ -219,8 +234,11 @@ async def init_motor_async():
 
         await motor5.initialize(calibrate=False, home=False)
         await motor5.enable_motor()
+
+        await motor6.initialize(calibrate=False, home=False)
+        await motor6.enable_motor()
         
-        print("✅ All 5 Motors ready!")
+        print("✅ All 6 Motors ready!")
         return True
     except Exception as e:
         print(f"❌ Motor initialization failed: {e}")
@@ -249,7 +267,7 @@ def forward():
         future_pos = asyncio.run_coroutine_threadsafe(motor1.get_current_position_user(), motor_loop)
         pos_mot1 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor1.move_to_position_abs_user(pos_mot1 + 50, speed_user=100000.0, wait=True), motor_loop
+            motor1.move_to_position_abs_user(pos_mot1 + 200, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "Forward", 200
@@ -263,7 +281,7 @@ def backward():
         future_pos = asyncio.run_coroutine_threadsafe(motor1.get_current_position_user(), motor_loop)
         pos_mot1 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor1.move_to_position_abs_user(pos_mot1 - 50, speed_user=100000.0, wait=True), motor_loop
+            motor1.move_to_position_abs_user(pos_mot1 - 200, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "Backward", 200
@@ -278,7 +296,7 @@ def upward():
         future_pos = asyncio.run_coroutine_threadsafe(motor2.get_current_position_user(), motor_loop)
         pos_mot2 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor2.move_to_position_abs_user(pos_mot2 - 10, speed_user=100000.0, wait=True), motor_loop
+            motor2.move_to_position_abs_user(pos_mot2 + 500, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "upward", 200
@@ -292,7 +310,7 @@ def downward():
         future_pos = asyncio.run_coroutine_threadsafe(motor2.get_current_position_user(), motor_loop)
         pos_mot2 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor2.move_to_position_abs_user(pos_mot2 + 10, speed_user=100000.0, wait=True), motor_loop
+            motor2.move_to_position_abs_user(pos_mot2 - 500, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "downward", 200
@@ -307,7 +325,7 @@ def upward2():
         future_pos = asyncio.run_coroutine_threadsafe(motor3.get_current_position_user(), motor_loop)
         pos_mot3 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor3.move_to_position_abs_user(pos_mot3 - 10, speed_user=100000.0, wait=True), motor_loop
+            motor3.move_to_position_abs_user(pos_mot3 - 400, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "upward2", 200
@@ -321,7 +339,7 @@ def downward2():
         future_pos = asyncio.run_coroutine_threadsafe(motor3.get_current_position_user(), motor_loop)
         pos_mot3 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor3.move_to_position_abs_user(pos_mot3 + 10, speed_user=100000.0, wait=True), motor_loop
+            motor3.move_to_position_abs_user(pos_mot3 + 400, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "downward2", 200
@@ -336,7 +354,7 @@ def rot_clockwise():
         future_pos = asyncio.run_coroutine_threadsafe(motor4.get_current_position_user(), motor_loop)
         pos_mot4 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor4.move_to_position_abs_user(pos_mot4 + 45, speed_user=100000.0, wait=True), motor_loop
+            motor4.move_to_position_abs_user(pos_mot4 + 200, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "rot_clockwise", 200
@@ -350,7 +368,7 @@ def rot_counter_clockwise():
         future_pos = asyncio.run_coroutine_threadsafe(motor4.get_current_position_user(), motor_loop)
         pos_mot4 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor4.move_to_position_abs_user(pos_mot4 - 45, speed_user=100000.0, wait=True), motor_loop
+            motor4.move_to_position_abs_user(pos_mot4 - 200, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "rot_counter_clockwise", 200
@@ -364,7 +382,7 @@ def rot_clockwise2():
     try:
         future_pos = asyncio.run_coroutine_threadsafe(motor5.get_current_position_user(), motor_loop)
         pos_mot5 = future_pos.result()
-        future_move = asyncio.run_coroutine_threadsafe(motor5.move_to_position_abs_user(pos_mot5 + 45, speed_user=100000.0, wait=True), motor_loop)
+        future_move = asyncio.run_coroutine_threadsafe(motor5.move_to_position_abs_user(pos_mot5 + 250, speed_user=100000.0, wait=True), motor_loop)
         future_move.result()
         return "rot_clockwise2", 200
     except Exception as e: 
@@ -379,20 +397,52 @@ def rot_counter_clockwise2():
         future_pos = asyncio.run_coroutine_threadsafe(motor5.get_current_position_user(), motor_loop)
         pos_mot5 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor5.move_to_position_abs_user(pos_mot5 - 45, speed_user=100000.0, wait=True), motor_loop
+            motor5.move_to_position_abs_user(pos_mot5 - 250, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "rot_counter_clockwise2", 200
     except Exception as e: 
         return f"Error: {e}", 500
 
+# --- MOTOR 6 ROUTES ---
+@app.route('/rot_clockwise3')
+def rot_clockwise3():
+    if motor6 is None or motor_loop is None: return "Motor not initialized", 500
+    print("Action: Rotating Motor 6 Clockwise")
+    try:
+        future_pos = asyncio.run_coroutine_threadsafe(motor6.get_current_position_user(), motor_loop)
+        pos_mot6 = future_pos.result()
+        future_move = asyncio.run_coroutine_threadsafe(motor6.move_to_position_abs_user(pos_mot6 + 250, speed_user=100000.0, wait=True), motor_loop)
+        future_move.result()
+        return "rot_clockwise6", 200
+    except Exception as e: 
+        return f"Error: {e}", 500
+
+@app.route('/rot_counter_clockwise3')
+def rot_counter_clockwise3():
+    if motor6 is None or motor_loop is None: 
+        return "Motor not initialized", 500
+    print("Action: Rotating Motor 6 Counter-Clockwise")
+    try:
+        future_pos = asyncio.run_coroutine_threadsafe(motor6.get_current_position_user(), motor_loop)
+        pos_mot6 = future_pos.result()
+        future_move = asyncio.run_coroutine_threadsafe(
+            motor6.move_to_position_abs_user(pos_mot6 - 250, speed_user=100000.0, wait=True), motor_loop
+        )
+        future_move.result()
+        return "rot_counter_clockwise6", 200
+    except Exception as e: 
+        return f"Error: {e}", 500
+
+# --- MOTOR 7 ROUTES ---
+
 @app.route('/open')
 def open_servo():
     global current_servo_angle
     print("Action: Opening GPIO Servo (+10 deg)")
     # Enforce safe physical boundaries (0 to 180 degrees)
-    current_servo_angle = min(180, current_servo_angle + 10)
-    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(current_servo_angle))
+    #current_servo_angle = min(180, current_servo_angle + 10)
+    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(150))
     time.sleep(0.15)              # Give the servo motor time to spin to position
     servo_pwm.ChangeDutyCycle(0)   # Jitter prevention cut-off
     return f"Opened to {current_servo_angle}", 200
@@ -401,8 +451,8 @@ def open_servo():
 def close_servo():
     global current_servo_angle
     print("Action: Closing GPIO Servo (-10 deg)")
-    current_servo_angle = max(0, current_servo_angle - 10)
-    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(current_servo_angle))
+    #current_servo_angle = max(0, current_servo_angle - 10)
+    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(33))
     time.sleep(0.15)
     servo_pwm.ChangeDutyCycle(0)
     return f"Closed to {current_servo_angle}", 200
