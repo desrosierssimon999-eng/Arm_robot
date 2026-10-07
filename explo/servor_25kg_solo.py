@@ -44,12 +44,12 @@ p1.start(angle_to_percent(0)) # Initialization
 #En X si x augmente, va vers la gauche
 #En Y si y augmente, va vers le haut
 
-f_x = 33
+f_x = 75
 
 move_it(f_x)
 time.sleep(2)
 
-f_x = f_x + 72
+f_x = 130
 move_it(f_x)
 time.sleep(2)
 

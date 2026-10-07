@@ -24,7 +24,7 @@ motor_loop = None
 # New variables for GPIO Servo tracking
 SERVO_PIN = 2
 servo_pwm = None
-current_servo_angle = 33  # Start at a neutral 90-degree position
+current_servo_angle = 0  # Start at a neutral 90-degree position
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -296,7 +296,7 @@ def upward():
         future_pos = asyncio.run_coroutine_threadsafe(motor2.get_current_position_user(), motor_loop)
         pos_mot2 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor2.move_to_position_abs_user(pos_mot2 + 500, speed_user=100000.0, wait=True), motor_loop
+            motor2.move_to_position_abs_user(pos_mot2 - 500, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "upward", 200
@@ -310,7 +310,7 @@ def downward():
         future_pos = asyncio.run_coroutine_threadsafe(motor2.get_current_position_user(), motor_loop)
         pos_mot2 = future_pos.result()
         future_move = asyncio.run_coroutine_threadsafe(
-            motor2.move_to_position_abs_user(pos_mot2 - 500, speed_user=100000.0, wait=True), motor_loop
+            motor2.move_to_position_abs_user(pos_mot2 + 500, speed_user=100000.0, wait=True), motor_loop
         )
         future_move.result()
         return "downward", 200
@@ -441,9 +441,9 @@ def open_servo():
     global current_servo_angle
     print("Action: Opening GPIO Servo (+10 deg)")
     # Enforce safe physical boundaries (0 to 180 degrees)
-    #current_servo_angle = min(180, current_servo_angle + 10)
-    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(150))
-    time.sleep(0.15)              # Give the servo motor time to spin to position
+    current_servo_angle = min(180, current_servo_angle + 50)
+    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(current_servo_angle))
+    time.sleep(0.5)              # Give the servo motor time to spin to position
     servo_pwm.ChangeDutyCycle(0)   # Jitter prevention cut-off
     return f"Opened to {current_servo_angle}", 200
 
@@ -451,9 +451,9 @@ def open_servo():
 def close_servo():
     global current_servo_angle
     print("Action: Closing GPIO Servo (-10 deg)")
-    #current_servo_angle = max(0, current_servo_angle - 10)
-    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(33))
-    time.sleep(0.15)
+    current_servo_angle = max(0, current_servo_angle - 50)
+    servo_pwm.ChangeDutyCycle(angle_to_duty_cycle(current_servo_angle))
+    time.sleep(0.5)
     servo_pwm.ChangeDutyCycle(0)
     return f"Closed to {current_servo_angle}", 200
 
